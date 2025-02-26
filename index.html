@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+        }
+        .calculator {
+            max-width: 300px;
+            margin: 0 auto;
+            margin-bottom: 20px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .redirect-button {
+            display: block;
+            width: 300px;
+            margin: 0 auto;
+            padding: 15px;
+            font-size: 1.2em;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .redirect-button:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button onclick="clearDisplay()">C</button>
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="setOperation('÷')">÷</button>
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="setOperation('×')">×</button>
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="setOperation('-')">-</button>
+            <button onclick="appendNumber('0')">0</button>
+            <button onclick="appendNumber('.')">.</button>
+            <button class="operator" onclick="calculate()">=</button>
+            <button class="operator" onclick="setOperation('+')">+</button>
+        </div>
+    </div>
+    <button class="redirect-button" onclick="redirectToGoogle()">Go to Google</button>
+    <script>
+        let firstNumber = '';
+        let operation = '';
+        let secondNumber = '';
+        let newCalculation = true;
+
+        const display = document.getElementById('display');
+        const tg = window.Telegram.WebApp;
+
+        tg.ready();
+        tg.expand();
+
+        function updateDisplay(text) {
+            display.textContent = text;
+        }
+
+        function appendNumber(num) {
+            if (operation === '') {
+                if (newCalculation) {
+                    firstNumber = num;
+                    newCalculation = false;
+                } else {
+                    firstNumber += num;
+                }
+                updateDisplay(firstNumber);
+            } else {
+                secondNumber += num;
+                updateDisplay(`${firstNumber} ${operation} ${secondNumber}`);
+            }
+        }
+
+        function setOperation(op) {
+            if (firstNumber === '') {
+                firstNumber = '0';
+            }
+            operation = op;
+            updateDisplay(`${firstNumber} ${operation}`);
+        }
+
+        function clearDisplay() {
+            firstNumber = '';
+            operation = '';
+            secondNumber = '';
+            newCalculation = true;
+            updateDisplay('0');
+        }
+
+        function calculate() {
+            if (firstNumber && operation && secondNumber) {
+                try {
+                    const num1 = parseFloat(firstNumber);
+                    const num2 = parseFloat(secondNumber);
+                    let result;
+
+                    switch(operation) {
+                        case '+':
+                            result = num1 + num2;
+                            break;
+                        case '-':
+                            result = num1 - num2;
+                            break;
+                        case '×':
+                            result = num1 * num2;
+                            break;
+                        case '÷':
+                            if (num2 === 0) {
+                                updateDisplay('Error: Division by zero');
+                                clearDisplay();
+                                return;
+                            }
+                            result = num1 / num2;
+                            break;
+                    }
+
+                    const displayResult = result.toString();
+                    updateDisplay(displayResult);
+                    firstNumber = displayResult;
+                    operation = '';
+                    secondNumber = '';
+                    newCalculation = true;
+                } catch {
+                    updateDisplay('Error');
+                    clearDisplay();
+                }
+            }
+        }
+        function redirectToGoogle() {
+            window.open('https://www.google.com', '_blank');
+        }
+    </script>
+</body>
+</html>
